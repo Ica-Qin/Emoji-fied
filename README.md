@@ -19,7 +19,11 @@ The installation visualises the hidden process of emoji-fication described in th
 ## 🎬 Demo Video
 
 
-https://git.arts.ac.uk/user-attachments/assets/a3e518bf-7788-4e66-b4e5-65b59470e052
+
+
+https://github.com/user-attachments/assets/3ee92d83-e0cc-42b4-839e-c0125d08e00f
+
+
 
 
 
@@ -28,12 +32,14 @@ https://git.arts.ac.uk/user-attachments/assets/a3e518bf-7788-4e66-b4e5-65b59470e
 
 ## 🖼 Showcase Photo
 
-![showcase01](https://git.arts.ac.uk/user-attachments/assets/907e2f7f-581b-467b-9700-ac9d90b4ad55)
-![showcase02](https://git.arts.ac.uk/user-attachments/assets/74d2261e-e6e3-464a-aff5-18ed1bb578ee)
-![showcase03](https://git.arts.ac.uk/user-attachments/assets/6532023b-0624-42a9-8d4d-ad042552fc31)
-![image](https://git.arts.ac.uk/user-attachments/assets/84ce491b-43be-44bd-9389-81e625251740)
-![image](https://git.arts.ac.uk/user-attachments/assets/909a4773-1867-4bd7-aafb-bb56bc7f28c9)
-![image](https://git.arts.ac.uk/user-attachments/assets/25f3c791-832a-4f00-92ad-ab263a4cf2ef)
+![showcase03](https://github.com/user-attachments/assets/64a2868c-4ef0-471e-a04f-d1f6ba57f40e)
+<img width="1522" height="1012" alt="image" src="https://github.com/user-attachments/assets/64796730-729f-4701-9a33-0704aeda2255" />
+![showcase01](https://github.com/user-attachments/assets/ab0a5cef-3348-44b0-a922-a307c8fc21fb)
+
+
+<img width="1280" height="672" alt="test2" src="https://github.com/user-attachments/assets/802bc59a-19f5-440f-a5b1-90e943105535" />
+<img width="1280" height="677" alt="test3" src="https://github.com/user-attachments/assets/9f7d3804-6000-4900-b329-74ac2ceb7941" />
+<img width="1280" height="672" alt="image" src="https://github.com/user-attachments/assets/8ee38c77-897a-4099-82b3-2515e1d4cbce" />
 
 
 ---
@@ -98,5 +104,3 @@ https://git.arts.ac.uk/user-attachments/assets/a3e518bf-7788-4e66-b4e5-65b59470e
 
 ### Logs
 [Development Logs](Development_Log.md)
-
-[ChatGPT Dialogues Link](https://chatgpt.com/g/g-p-6845f17f205c81919e92aff9cfe2bbe1-fianl-project/project)

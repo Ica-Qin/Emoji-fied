@@ -1,0 +1,202 @@
+// ========== 打印机分配 ==========
+// P1 → happy / surprise
+// P2 → sad
+// P3 → angry / fear
+
+HardwareSerial& P1 = Serial1;
+HardwareSerial& P2 = Serial2;
+HardwareSerial& P3 = Serial3;
+
+// ========== 风扇 ==========
+const int FAN_PIN = 9;
+unsigned long fanOffTime = 0;
+
+// ========== 其它 ==========
+const unsigned long START_INTERVAL_MS = 30000;
+unsigned long lastStart = 0;
+
+void setup() {
+  Serial.begin(9600);      // 跟 OpenMV 通讯
+  P1.begin(9600);
+  P2.begin(9600);
+  P3.begin(9600);
+
+  pinMode(FAN_PIN, OUTPUT);
+  digitalWrite(FAN_PIN, LOW);
+
+  while (!Serial);
+  Serial.println("Arduino READY (Real Print Version). Periodically sending S...");
+}
+
+String lineFromOV;
+int imgW = 0, imgH = 0;
+bool receivingImage = false;
+
+// === 表情缓存 ===
+String lastLabel = "";
+String lastScore = "";
+int currentPrinter = 1;   // 1/2/3 对应三台打印机
+
+void loop() {
+
+  // ========== 1. 定时发送 'S' 指令给 OpenMV ==========
+  unsigned long now = millis();
+  if (now - lastStart >= START_INTERVAL_MS) {
+    lastStart = now;
+    Serial.write('S');
+    Serial.println("[Arduino] Sent 'S'");
+  }
+
+  // ========== 2. 接收 OpenMV 串口数据 ==========
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n') {
+      processLine(lineFromOV);
+      lineFromOV = "";
+    } else if (c != '\r') {
+      lineFromOV += c;
+    }
+  }
+
+  // ========== 3. 风扇定时关闭 ==========
+  if (fanOffTime > 0 && millis() >= fanOffTime) {
+    digitalWrite(FAN_PIN, LOW);
+    fanOffTime = 0;
+    Serial.println("[Arduino] FAN OFF");
+  }
+}
+
+
+// ========== 解析行 ==========
+void processLine(String line) {
+
+  // =====================================================
+  //                      EMO,label,score
+  // =====================================================
+  if (line.startsWith("EMO")) {
+
+    int p1 = line.indexOf(',');
+    int p2 = line.indexOf(',', p1 + 1);
+
+    if (p1 > 0 && p2 > p1) {
+      lastLabel = line.substring(p1 + 1, p2);
+      lastScore = line.substring(p2 + 1);
+    }
+
+    Serial.print("[Arduino] Expression = ");
+    Serial.print(lastLabel);
+    Serial.print(" | Score = ");
+    Serial.println(lastScore);
+
+    // 🔵 收到表情 → 风扇开 30 秒
+    digitalWrite(FAN_PIN, HIGH);
+    fanOffTime = millis() + 30000;
+    Serial.println("[Arduino] FAN ON for 30s");
+
+    // =====================================================
+    //     根据表情选择打印机（按你现在给的规则）
+    // =====================================================
+    String L = lastLabel;
+
+    if (L == "happy" || L == "surprise") {
+      currentPrinter = 1;      // P1
+    }
+    else if (L == "sad") {
+      currentPrinter = 2;      // P2
+    }
+    else if (L == "angry" || L == "fear") {
+      currentPrinter = 3;      // P3
+    } else {
+      // 兜底：如果出现其它 label，就用 1 号机
+      currentPrinter = 1;
+    }
+
+    Serial.print("[Arduino] Use Printer ");
+    Serial.println(currentPrinter);
+
+    return;
+  }
+
+  // =====================================================
+  //                   IMG,w,h
+  // =====================================================
+  if (line.startsWith("IMG")) {
+    int p1 = line.indexOf(',');
+    int p2 = line.indexOf(',', p1 + 1);
+
+    imgW = line.substring(p1 + 1, p2).toInt();
+    imgH = line.substring(p2 + 1).toInt();
+
+    receivingImage = true;
+
+    Serial.print("[Arduino] Receiving image ");
+    Serial.print(imgW);
+    Serial.print(" x ");
+    Serial.println(imgH);
+
+    HardwareSerial *P = getPrinter();
+
+    // ------- 打印表情文字 -------
+    (*P).println("");
+    (*P).println("Expression: " + lastLabel);
+    (*P).println("Score: " + lastScore);
+    (*P).println("----------------------");
+    (*P).println("");
+
+    return;
+  }
+
+  // =====================================================
+  //                 接收图像位图行
+  // =====================================================
+  if (receivingImage) {
+
+    if (line.length() != imgW) {
+      Serial.println("[Arduino] Bad row length, ignored.");
+      return;
+    }
+
+    HardwareSerial *P = getPrinter();
+
+    // ESC/POS raster bit image
+    (*P).write(0x1D); (*P).write(0x76); (*P).write(0x30); (*P).write(0x00);
+    (*P).write((imgW + 7) / 8);
+    (*P).write(0x00);
+    (*P).write(0x01);
+    (*P).write(0x00);
+
+    for (int i = 0; i < imgW; i += 8) {
+      uint8_t b = 0;
+      for (int bit = 0; bit < 8; bit++) {
+        if (i + bit < imgW && line[i + bit] == '1') {
+          b |= (0x80 >> bit);
+        }
+      }
+      (*P).write(b);
+    }
+
+    static int receivedRows = 0;
+    receivedRows++;
+
+    if (receivedRows >= imgH) {
+      Serial.println("[Arduino] Image done");
+
+      (*P).println("");
+      (*P).println("------ END ------");
+      (*P).println("");
+
+      receivedRows = 0;
+      receivingImage = false;
+    }
+
+    return;
+  }
+}
+
+
+// ========== 根据 currentPrinter 返回指针 ==========
+HardwareSerial* getPrinter() {
+  if (currentPrinter == 1) return &P1;
+  if (currentPrinter == 2) return &P2;
+  return &P3;  // 3
+}
